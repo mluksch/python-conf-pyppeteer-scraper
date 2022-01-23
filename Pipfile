@@ -3,9 +3,14 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[scripts]
+deploy = "chalice deploy"
+test = "pipenv run main.py"
+
 [packages]
 pyppeteer = "*"
 requests = "*"
+chalice = "*"
 
 [dev-packages]
 

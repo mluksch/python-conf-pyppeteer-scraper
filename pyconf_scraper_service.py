@@ -6,24 +6,28 @@ BASE_URL = 'https://www.python.org'
 
 
 async def scrape_python_confs():
-    browser = await launch()
-    page = await browser.newPage()
-    await page.goto(BASE_URL)
-    results = []
-    li_list = await page.querySelectorAll(".shrubbery .menu li")
-    for el in li_list:
-        try:
-            time = await el.querySelector("time")
-            dt = await page.evaluate('el => el.getAttribute("datetime")', time)
-            event = await el.querySelector('a')
-            event_title = await page.evaluate('el => el.textContent', event)
-            event_link = await page.evaluate('el => el.getAttribute("href")', event)
-            results.append({
-                "datetime": datetime.datetime.fromisoformat(dt.strip()),
-                "event_title": event_title,
-                "link": f"{BASE_URL}{event_link}"
+    try:
+        browser = await launch()
+        page = await browser.newPage()
+        await page.goto(BASE_URL)
+        shrubbery_list = await page.querySelectorAll(".shrubbery")
+        conf_root = shrubbery_list[1]
+        conf_list = await page.evaluate(
+            """
+            el => Object.values(el.querySelectorAll("li")).map(item => {
+                return {
+                    "event_title": item.querySelector("a").text,
+                    "link": item.querySelector("a").getAttribute("href"),
+                    "datetime": item.querySelector("time").getAttribute("datetime"),
+                }    
             })
-        except Exception as e:
-            pass
-    await browser.close()
-    return results
+            """, conf_root)
+        await browser.close()
+        return [{
+            "datetime": datetime.datetime.fromisoformat(item["datetime"].strip()),
+            "event_title": item["event_title"],
+            "link": f"{BASE_URL if item['link'].startswith('/') else ''}{item['link']}"
+        } for item in conf_list]
+    except Exception as e:
+        print(f"error: {e}")
+        return []

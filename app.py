@@ -1,12 +1,20 @@
-from chalice import Chalice
+import asyncio
+
+from chalice import Chalice, Cron
+
+import processor
 
 app = Chalice(app_name='pyppeteer-for-python-confs')
 
 
+@app.schedule(Cron(0, 8, '1', '*', '?', '*'))
+def process():
+    asyncio.get_event_loop().run_until_complete(processor.process())
+
+
 @app.route('/')
 def index():
-    return {'hello': 'world'}
-
+    asyncio.get_event_loop().run_until_complete(processor.process())
 
 # The view function above will return {"hello": "world"}
 # whenever you make an HTTP GET request to '/'.

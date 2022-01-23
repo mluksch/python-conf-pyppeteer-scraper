@@ -3,3 +3,5 @@
 .idea
 .chalice/config.json
 .env
+.chalice/deployed
+.chalice/deployments
